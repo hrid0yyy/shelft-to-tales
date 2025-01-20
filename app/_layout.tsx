@@ -1,39 +1,37 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
+import { AuthContextProvider, useAuth } from "@/hooks/AuthContext";
+import { NotificationContextProvider } from "@/hooks/NotificationContext";
+import { Stack, useRouter } from "expo-router";
+import { useEffect } from "react";
+import { MenuProvider } from "react-native-popup-menu";
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const router = useRouter();
+  const MainLayout = () => {
+    const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    useEffect(() => {
+      if (isAuthenticated) {
+        router.replace("/screens/App");
+      } else {
+        router.replace("/");
+      }
+    }, [isAuthenticated]);
 
-  if (!loaded) {
-    return null;
-  }
-
+    return (
+      <MenuProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="screens/App" />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="signup" />
+        </Stack>
+      </MenuProvider>
+    );
+  };
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AuthContextProvider>
+      <NotificationContextProvider>
+        <MainLayout />
+      </NotificationContextProvider>
+    </AuthContextProvider>
   );
 }

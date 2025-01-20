@@ -23,6 +23,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      
       "expo-router",
       [
         "expo-splash-screen",
@@ -32,6 +33,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+        
       ]
     ],
     "experiments": {
