@@ -6,28 +6,80 @@ import {
   ScrollView,
   TextInput,
   Image,
+  Pressable,
 } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   useFonts,
   OpenSans_400Regular,
   OpenSans_700Bold,
 } from "@expo-google-fonts/open-sans";
-
+import { showMessage, hideMessage } from "react-native-flash-message";
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+} from "react-native-popup-menu";
 import { BottomSheet } from "react-native-sheet";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
+import { fetchEbooks, grantAccess } from "@/utils/ebook";
+import Loading from "@/components/Loading";
+import { useAuth } from "@/hooks/AuthContext";
 export default function Ebooks() {
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("");
+  const [ebooks, setEbooks] = useState(null);
+
+  const { user } = useAuth();
+  function truncateText(text, maxLength = 50) {
+    if (text?.length <= maxLength) {
+      return text; // Return the original text if it's within the limit
+    }
+    return text?.slice(0, maxLength) + "..."; // Truncate and add ellipsis
+  }
+
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await fetchEbooks(search, sort);
+      setEbooks(response?.ebooks);
+    };
+    fetch();
+  }, [search, sort]);
   const router = useRouter();
   const bottomSheet = useRef<BottomSheetRef>(null);
+  const [details, setDetails] = useState();
+
+  const handleClaim = async () => {
+    const response = await grantAccess(user?.id, details?.bookId);
+    if (response.success) {
+      showMessage({
+        message: "Shelf to tales",
+        description: "Thanks for claiming this product",
+        type: "success",
+      });
+    } else {
+      showMessage({
+        message: "Shelf to tales",
+        description: "Something went wrong",
+        type: "danger",
+      });
+    }
+  };
+
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
   });
+  if (ebooks == null) {
+    return <Loading />;
+  }
   return (
     <View style={styles.container}>
       <BottomSheet height={600} ref={bottomSheet}>
@@ -43,14 +95,14 @@ export default function Ebooks() {
           <Image
             style={{ height: hp(20), aspectRatio: 1 }}
             source={{
-              uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2KZ1NgDCph0JfyIDjOg3oZ7crBnipU6CFBQ&s",
+              uri: details?.cover,
             }}
           />
           <Text style={{ fontSize: hp(4), fontFamily: "OpenSans_400Regular" }}>
-            Book Title
+            {details?.title}
           </Text>
           <Text style={{ fontSize: hp(2), fontFamily: "OpenSans_400Regular" }}>
-            Book Author
+            {details?.author}
           </Text>
           <Text
             style={{
@@ -59,10 +111,7 @@ export default function Ebooks() {
               fontFamily: "OpenSans_400Regular",
             }}
           >
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Laborum
-            illum nesciunt assumenda numquam aut blanditiis recusandae soluta
-            necessitatibus, nulla tempora quos inventore nostrum sint maiores
-            corrupti ducimus suscipit vel adipisci!
+            {truncateText(details?.description, 250) || ""}
           </Text>
 
           <Text
@@ -72,7 +121,7 @@ export default function Ebooks() {
               fontFamily: "OpenSans_400Regular",
             }}
           >
-            Genre: Romance, Novel
+            Genre: {details?.genres}
           </Text>
           <Text
             style={{
@@ -81,7 +130,7 @@ export default function Ebooks() {
               fontFamily: "OpenSans_400Regular",
             }}
           >
-            100 taka
+            {details?.price > 0 ? `৳ ${details?.price}` : "Free"}
           </Text>
 
           <TouchableOpacity
@@ -93,6 +142,14 @@ export default function Ebooks() {
               borderRadius: hp(3),
               marginTop: hp(3),
             }}
+            onPress={() => {
+              if (details?.price > 0) {
+                // payment process
+              } else {
+                // claim process
+                handleClaim();
+              }
+            }}
           >
             <Text
               style={{
@@ -102,7 +159,7 @@ export default function Ebooks() {
                 color: "white",
               }}
             >
-              Purchase
+              {details?.price > 0 ? "Purchase" : "Claim"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -120,8 +177,39 @@ export default function Ebooks() {
           <View style={styles.searchIcon}>
             <AntDesign name="search1" size={hp(2.5)} color="black" />
           </View>
-          <TextInput style={styles.input} placeholder="Search E Books" />
+          <TextInput
+            style={styles.input}
+            placeholder="Search E Books"
+            onChangeText={(e) => setSearch(e)}
+          />
         </View>
+        <Menu>
+          <MenuTrigger>
+            <Ionicons name="filter-sharp" size={hp(3)} color="black" />
+          </MenuTrigger>
+          <MenuOptions>
+            <MenuOption onSelect={() => setSort("asc")}>
+              <Text
+                style={{
+                  fontFamily: "OpenSans_400Regular",
+                  fontSize: hp(1.5),
+                }}
+              >
+                Low to High
+              </Text>
+            </MenuOption>
+            <MenuOption onSelect={() => setSort("desc")}>
+              <Text
+                style={{
+                  fontFamily: "OpenSans_400Regular",
+                  fontSize: hp(1.5),
+                }}
+              >
+                High to Low
+              </Text>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
       </View>
 
       <ScrollView style={styles.mainBox}>
@@ -133,26 +221,51 @@ export default function Ebooks() {
             gap: hp(3),
           }}
         >
-          <View style={styles.book}>
-            <Image
-              style={styles.image}
-              source={{
-                uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2KZ1NgDCph0JfyIDjOg3oZ7crBnipU6CFBQ&s",
-              }}
-            />
-            <View style={styles.details}>
-              <Text style={styles.title}>Book Title</Text>
-              <Text style={styles.author}>Book Author</Text>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => bottomSheet.current?.show()}
-              >
-                <Text style={styles.buttonText}>Details | 150</Text>
-              </TouchableOpacity>
+          {ebooks.map((book) => (
+            <View key={book.bookId} style={styles.book}>
+              <Image
+                style={styles.image}
+                source={{
+                  uri: book.cover,
+                }}
+              />
+              <View style={styles.details}>
+                <Text style={styles.title}>{book.title}</Text>
+                <Text style={styles.author}>{book.author}</Text>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => {
+                    setDetails(book);
+                    bottomSheet.current?.show();
+                  }}
+                >
+                  <Text style={styles.buttonText}>
+                    Details | {book.price > 0 ? `৳ ${book.price}` : "Free"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          ))}
         </View>
       </ScrollView>
+      <TouchableOpacity
+        onPress={() => {
+          router.push("/screens/MyBooks");
+        }}
+        style={{
+          height: hp(7),
+          aspectRatio: 1,
+          borderRadius: 100,
+          backgroundColor: "#3c6960",
+          position: "absolute",
+          top: hp(88),
+          left: wp(80),
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <AntDesign name="book" size={hp(3.5)} color="white" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -167,8 +280,9 @@ const styles = StyleSheet.create({
     width: wp(100),
 
     flexDirection: "row",
-    justifyContent: "flex-start",
-    gap: wp(8),
+    justifyContent: "space-evenly",
+    marginBottom: hp(2),
+    marginTop: hp(1),
     alignItems: "center",
   },
   ebooks: {
@@ -237,7 +351,7 @@ const styles = StyleSheet.create({
     fontFamily: "OpenSans_400Regular",
   },
   image: {
-    height: hp(20),
+    width: hp(20),
     aspectRatio: 1,
   },
 });

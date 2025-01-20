@@ -3,6 +3,7 @@ import { NotificationContextProvider } from "@/hooks/NotificationContext";
 import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { MenuProvider } from "react-native-popup-menu";
+import FlashMessage from "react-native-flash-message";
 export default function RootLayout() {
   const router = useRouter();
   const MainLayout = () => {
@@ -24,6 +25,7 @@ export default function RootLayout() {
           <Stack.Screen name="login" />
           <Stack.Screen name="signup" />
         </Stack>
+        <FlashMessage position="top" /> {/* <--- here as the last component */}
       </MenuProvider>
     );
   };

@@ -44,6 +44,7 @@
     "react-native-dialog": "^9.3.0",
     "react-native-dotenv": "^3.4.11",
     "react-native-fast-image": "^8.6.3",
+    "react-native-flash-message": "^0.4.2",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-image-viewing": "^0.2.2",
     "react-native-image-zoom-viewer": "^3.0.1",
@@ -57,7 +58,8 @@
     "react-native-screens": "~4.4.0",
     "react-native-sheet": "^0.1.6",
     "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.5"
+    "react-native-webview": "13.12.5",
+    "woby-progress-bar": "^5.0.8"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
