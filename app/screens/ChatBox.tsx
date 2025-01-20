@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -18,81 +18,99 @@ import {
   OpenSans_400Regular,
   OpenSans_700Bold,
 } from "@expo-google-fonts/open-sans";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  deliverMessage,
+  fetchMessages,
+  fetchNewMessages,
+} from "@/utils/messenger";
+import { useAuth } from "@/hooks/AuthContext";
+import Loading from "@/components/Loading";
 
-export default function ChatBox({ navigation }) {
+export default function ChatBox() {
+  const { receiverId } = useLocalSearchParams();
+  const { user } = useAuth();
+  const [receiver, setReceiver] = useState();
+  const [inbox, setInbox] = useState(null);
+  const [lastId, setLastId] = useState();
+  const [isSeen, setIsSeen] = useState(false);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    fetchMessagesData();
+
+    const intervalId = setInterval(async () => {
+      if (lastId) {
+        const newMessages = await fetchNewMessages(
+          user?.id,
+          receiverId,
+          lastId,
+          isSeen
+        );
+        if (newMessages.length > 0) {
+          const latestMessageId = newMessages[newMessages.length - 1]?.id;
+          setLastId(latestMessageId);
+        }
+      }
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [lastId, seen]);
   const router = useRouter();
-  const [inputText, setInputText] = useState("");
-  const [messages, setMessages] = useState([
-    {
-      id: "1",
-      text: "Hello! How can I help you?",
-      sender: "user",
-      time: new Date("2023-12-30T10:00:00"),
-    },
-    {
-      id: "2",
-      text: "Can you tell me more about the services?",
-      sender: "me",
-      time: new Date("2023-12-30T10:01:00"),
-    },
-    {
-      id: "3",
-      text: "Sure, let me provide you with the details.",
-      sender: "user",
-      time: new Date("2023-12-30T10:02:00"),
-    },
-    {
-      id: "4",
-      text: "What are the prices for your premium plans?",
-      sender: "me",
-      time: new Date("2023-12-30T10:05:00"),
-    },
-    {
-      id: "5",
-      text: "The premium plan starts at $50 per month.",
-      sender: "user",
-      time: new Date("2023-12-30T10:06:00"),
-    },
-    {
-      id: "6",
-      text: "Is there a trial version available?",
-      sender: "me",
-      time: new Date("2023-12-30T10:10:00"),
-    },
-    {
-      id: "7",
-      text: "Yes, we offer a 14-day trial for all plans.",
-      sender: "user",
-      time: new Date("2023-12-30T10:12:00"),
-    },
-  ]);
 
-  const sendMessage = () => {
-    if (inputText.trim() !== "") {
-      const newMessage = {
-        id: Date.now().toString(),
-        text: inputText,
-        sender: "me",
-        time: new Date(),
-      };
-      setMessages((prevMessages) => [newMessage, ...prevMessages]);
-      setInputText("");
+  const fetchMessagesData = async () => {
+    try {
+      // Assuming fetchMessages is a function that fetches data from an API
+      const response = await fetchMessages(user?.id, receiverId);
+      setReceiver(response.receiverInfo);
+      setInbox(response.messages);
+      // Use the correct reference to get the last message id
+
+      const lastMessage = response.messages[0];
+      console.log(lastMessage);
+      const senderId = lastMessage?.senderId;
+      const status = lastMessage?.status;
+      const lastMessageId = lastMessage?.id;
+      if (status == "seen") {
+        setSeen(true);
+      } else {
+        setSeen(false);
+      }
+      if (senderId != user?.id) {
+        setIsSeen(true);
+      }
+      console.log("isSeen :", isSeen);
+      setLastId(lastMessageId);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
     }
   };
+  function formatTimestamp(timestamp) {
+    const date = new Date(timestamp); // Convert ISO string to Date object
 
-  const formatDateTime = (date) => {
-    return date.toLocaleString("en-US", {
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-      month: "short",
-      day: "numeric",
-    });
+    // Define options for custom formatting
+    const options = {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // Use 12-hour format (AM/PM)
+      month: "short", // Abbreviated month (e.g., Jan)
+      day: "numeric", // Day of the month
+      year: "numeric", // Full year (e.g., 2025)
+    };
+
+    // Format the date and return the custom string
+    const formattedTime = date.toLocaleString("en-US", options);
+
+    // Return in the format "7:20 PM, Jan 20, 2025"
+    return formattedTime.replace(",", ",");
+  }
+  const [message, setMessage] = useState(""); // State to track message input
+  const sendMessage = async () => {
+    const response = await deliverMessage(user?.id, receiverId, message);
+
+    setMessage("");
   };
 
-  const renderMessage = ({ item }) => {
-    const isUser = item.sender === "user";
+  const renderMessages = ({ item }) => {
+    const isUser = item.senderId != user?.id;
     return (
       <View
         style={[
@@ -112,10 +130,10 @@ export default function ChatBox({ navigation }) {
               isUser ? styles.userMessageText : styles.myMessageText,
             ]}
           >
-            {item.text}
+            {item.message}
           </Text>
         </View>
-        <Text style={styles.timestamp}>{formatDateTime(item.time)}</Text>
+        <Text style={styles.timestamp}>{formatTimestamp(item.time)} </Text>
       </View>
     );
   };
@@ -125,8 +143,8 @@ export default function ChatBox({ navigation }) {
     OpenSans_700Bold,
   });
 
-  if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+  if (inbox == null) {
+    return <Loading />;
   }
 
   return (
@@ -142,7 +160,7 @@ export default function ChatBox({ navigation }) {
         </TouchableOpacity>
         <Image
           source={{
-            uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS82vYIBVS3uk8dOuC-ZPBCSs6kVfAAAyZGKg&s",
+            uri: receiver?.profile_url,
           }}
           style={styles.profileImage}
         />
@@ -151,18 +169,33 @@ export default function ChatBox({ navigation }) {
             router.push("/screens/UserProfile");
           }}
         >
-          <Text style={styles.profileName}>Monkey D Luffy</Text>
+          <Text style={styles.profileName}>{receiver?.username}</Text>
         </TouchableOpacity>
       </View>
 
       {/* Messages */}
       <FlatList
-        data={messages.sort((a, b) => b.time - a.time)} // Sort in descending order
-        renderItem={renderMessage}
+        data={inbox} // Sort in descending order
+        renderItem={renderMessages}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messageList}
         inverted
       />
+      {seen && (
+        <View style={{ width: wp(100), flexDirection: "row-reverse" }}>
+          <Image
+            style={{
+              height: hp(2.5),
+              aspectRatio: 1,
+              borderRadius: 100,
+              marginRight: wp(4),
+              marginTop: -hp(3),
+            }}
+            resizeMode="contain"
+            source={{ uri: receiver?.profile_url }}
+          />
+        </View>
+      )}
 
       {/* Input Box */}
       <View style={styles.inputContainer}>
@@ -170,9 +203,8 @@ export default function ChatBox({ navigation }) {
           style={styles.input}
           placeholder="Type a message..."
           placeholderTextColor="#cfcfcf"
-          value={inputText}
-          onChangeText={setInputText}
-          onSubmitEditing={sendMessage}
+          value={message}
+          onChangeText={(e) => setMessage(e)}
         />
         <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
           <Ionicons name="send" size={hp(2.5)} color="white" />
@@ -252,7 +284,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    height: hp(5),
+    height: hp(),
     backgroundColor: "#f1f1f1",
     borderRadius: wp(3),
     paddingHorizontal: wp(3),

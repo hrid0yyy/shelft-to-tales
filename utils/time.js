@@ -1,17 +1,19 @@
-export const formatDateTime = (dateTimeStr) => {
-  // Parse the input datetime string into a Date object
-  const date = new Date(dateTimeStr);
+export function formatDateTime(timestamp) {
+  const date = new Date(timestamp); // Convert ISO string to Date object
 
-  // Format the date and time
+  // Define options for custom formatting
   const options = {
-    year: "numeric",
-    month: "long", // Use 'short' or 'numeric' for different formats
-    day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
-    timeZoneName: "short", // Includes the timezone (e.g., GMT)
+    hour12: true, // Use 12-hour format (AM/PM)
+    month: "short", // Abbreviated month (e.g., Jan)
+    day: "numeric", // Day of the month
+    year: "numeric", // Full year (e.g., 2025)
   };
 
-  return date.toLocaleString("en-US", options); // Adjust 'en-US' to your locale
-};
+  // Format the date and return the custom string
+  const formattedTime = date.toLocaleString("en-US", options);
+
+  // Return in the format "7:20 PM, Jan 20, 2025"
+  return formattedTime.replace(",", ",");
+}

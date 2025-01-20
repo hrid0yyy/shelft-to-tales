@@ -3,6 +3,7 @@ import { API_BASE_URL } from "@/config";
 import { useAuth } from "./AuthContext";
 import { getExchangeRequests } from "@/utils/exchange";
 import { allNotifications } from "@/utils/notification";
+import { fetchInbox } from "@/utils/messenger";
 
 export const NotificationContext = createContext(null);
 
@@ -12,6 +13,7 @@ export const NotificationContextProvider = ({ children }) => {
   const [totalNotification, setTotalNotification] = useState();
   const [requests, setRequests] = useState(null);
   const [totalRequests, setTotalRequests] = useState();
+  const [messages, setMessages] = useState();
   // Create a thread-like effect using a polling interval
   useEffect(() => {
     if (user?.id) {
@@ -33,6 +35,9 @@ export const NotificationContextProvider = ({ children }) => {
       const notificationData = await allNotifications(user.id);
       setTotalNotification(notificationData.totalUnseen);
       setNotification(notificationData.data);
+
+      const messagesData = await fetchInbox(user?.id);
+      setMessages(messagesData);
     } catch (error) {
       console.error("Error fetching notifications:", error);
       return { success: false, error: error.message };
@@ -41,7 +46,13 @@ export const NotificationContextProvider = ({ children }) => {
 
   return (
     <NotificationContext.Provider
-      value={{ totalNotification, notification, totalRequests, requests }}
+      value={{
+        totalNotification,
+        notification,
+        totalRequests,
+        requests,
+        messages,
+      }}
     >
       {children}
     </NotificationContext.Provider>

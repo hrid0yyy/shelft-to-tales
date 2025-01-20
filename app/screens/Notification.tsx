@@ -6,7 +6,7 @@ import {
   FlatList,
   Image,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -17,10 +17,13 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter } from "expo-router";
 import { useNotification } from "@/hooks/NotificationContext";
 import { OpenSans_400Regular } from "@expo-google-fonts/open-sans";
+import { useAuth } from "@/hooks/AuthContext";
+import { formatDateTime } from "@/utils/time";
 
 export default function Notification() {
-  const { totalNotification, notification, totalRequests, requests } =
+  const { totalNotification, notification, totalRequests, requests, messages } =
     useNotification();
+  const { user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Inbox"); // Default to Inbox
   const [unreadCounts, setUnreadCounts] = useState({
@@ -63,12 +66,25 @@ export default function Notification() {
       case "Inbox":
         return (
           <FlatList
-            data={inboxData}
-            keyExtractor={(item) => item.id.toString()}
+            data={messages}
+            keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.item}>
-                <Text style={styles.itemTitle}>{item.name}</Text>
-                <Text style={styles.itemText}>{item.message}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push(
+                      `/screens/ChatBox?receiverId=${item.receiverInfo.id}`
+                    );
+                  }}
+                >
+                  <Text style={styles.itemTitle}>
+                    {item.receiverInfo.username}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.itemText}>
+                  {item.senderId == user?.id ? "You : " : ""} {item.message}
+                </Text>
+                <Text style={styles.itemText}>{formatDateTime(item.time)}</Text>
               </View>
             )}
           />
