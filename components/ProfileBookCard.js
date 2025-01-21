@@ -9,7 +9,7 @@ import {
   OpenSans_400Regular,
   OpenSans_700Bold,
 } from "@expo-google-fonts/open-sans";
-export default function ProfileBookCard() {
+export default function ProfileBookCard({ cover, title, author }) {
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
@@ -19,15 +19,13 @@ export default function ProfileBookCard() {
       <Image
         style={styles.bookCover}
         source={{
-          uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfg2xjfZwMO84uJlh-LQ-IzG2eIurszQCdQg&s",
+          uri: cover,
         }}
       />
       <View style={styles.text}>
-        <TouchableOpacity>
-          {" "}
-          <Text style={styles.bookTitle}>A pocket full of rye</Text>
-        </TouchableOpacity>
-        <Text style={styles.bookAuthor}>Agatha Christie</Text>
+        <Text style={styles.bookTitle}>{title}</Text>
+
+        <Text style={styles.bookAuthor}>{author}</Text>
       </View>
     </View>
   );
@@ -35,7 +33,6 @@ export default function ProfileBookCard() {
 
 const styles = StyleSheet.create({
   book: {
-    width: wp(75),
     marginTop: hp(2),
     flexDirection: "row",
     backgroundColor: "white",
@@ -43,10 +40,11 @@ const styles = StyleSheet.create({
     paddingVertical: hp(1),
     paddingLeft: hp(1),
     borderRadius: hp(2),
+    paddingRight: hp(1),
     marginLeft: hp(1),
   },
   bookTitle: {
-    fontSize: hp(2.3),
+    fontSize: hp(2.1),
     fontFamily: "OpenSans_400Regular",
     marginRight: hp(1),
   },

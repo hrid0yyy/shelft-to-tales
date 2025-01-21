@@ -11,11 +11,19 @@ import {
 import AntDesign from "@expo/vector-icons/AntDesign";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { useRouter } from "expo-router";
-export default function PostCard() {
+import { useEffect } from "react";
+export default function PostCard({
+  userId,
+  username,
+  content,
+  time,
+  profileUrl,
+}) {
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
   });
+
   const router = useRouter();
   return (
     <View style={styles.postCard}>
@@ -23,7 +31,7 @@ export default function PostCard() {
         <Image
           style={styles.profilePic}
           source={{
-            uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvYAGFO9U3lykvVLbSZkijiIxT2uRKHxhy6A&s",
+            uri: profileUrl,
           }}
         />
       </View>
@@ -31,33 +39,17 @@ export default function PostCard() {
         <View style={styles.postHeader}>
           <TouchableOpacity
             onPress={() => {
-              router.push("/screens/UserProfile");
+              router.push(`/screens/UserProfile?userId=${userId}`);
             }}
           >
             {" "}
-            <Text style={styles.userName}>Max Verstappen</Text>
+            <Text style={styles.userName}>{username}</Text>
           </TouchableOpacity>
 
-          <Text style={styles.postDate}>28 January, 2025</Text>
+          <Text style={styles.postDate}>{time}</Text>
         </View>
 
-        <Text style={styles.postData}>
-          TU TU TU MAX VERSTAPPEN SIMPLY LOVELY TU TU TU MAX VERSTAPPEN SIMPLY
-          LOVELY TU TU TU MAX VERSTAPPEN SIMPLY LOVELY TU TU TU MAX VERSTAPPEN
-          SIMPLE LOVELY TU TU TU MAX VERSTAPPEN SIMPLY LOVELY TU TU TU MAX
-          VERSTAPPEN SIMPLY LOVELY TU TU TU MAX VERSTAPPEN SIMPLY LOVELY TU TU
-        </Text>
-
-        <View style={styles.postFooter}>
-          <TouchableOpacity>
-            <AntDesign name="hearto" size={hp(2.3)} color="grey" />
-          </TouchableOpacity>
-          <Text style={styles.reactionNum}>4.2 K</Text>
-          <TouchableOpacity>
-            <EvilIcons name="comment" size={hp(2.8)} color="grey" />
-          </TouchableOpacity>
-          <Text style={styles.reactionNum}>4.2 K</Text>
-        </View>
+        <Text style={styles.postData}>{content}</Text>
       </View>
     </View>
   );
@@ -67,6 +59,7 @@ const styles = StyleSheet.create({
   postCard: {
     width: wp(100),
     flexDirection: "row",
+    paddingBottom: hp(2),
     borderBottomWidth: wp(0.5), // Solid line between posts
     borderBottomColor: "rgba(0,0,0,0.2)", // Line color
   },
@@ -104,17 +97,5 @@ const styles = StyleSheet.create({
   postData: {
     fontFamily: "OpenSans_400Regular",
     fontSize: hp(1.3),
-  },
-  postFooter: {
-    height: hp(6),
-    width: wp(75),
-    alignItems: "center",
-    flexDirection: "row",
-    gap: hp(1),
-  },
-  reactionNum: {
-    fontFamily: "OpenSans_400Regular",
-    fontSize: hp(1.2),
-    color: "grey",
   },
 });

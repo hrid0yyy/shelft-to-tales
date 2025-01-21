@@ -6,7 +6,7 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -16,6 +16,7 @@ import {
   OpenSans_400Regular,
   OpenSans_700Bold,
 } from "@expo-google-fonts/open-sans";
+import { getUserProfile, toggleFollow } from "@/utils/profile";
 import {
   Menu,
   MenuOptions,
@@ -28,7 +29,11 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons"; // Import the mess
 import Ionicons from "@expo/vector-icons/Ionicons";
 import ProfilePostCard from "@/components/ProfilePostCard";
 import ProfileBookCard from "@/components/ProfileBookCard";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAuth } from "@/hooks/AuthContext";
+import { formatDateTime } from "@/utils/time";
+import Loading from "@/components/Loading";
+import PostCard from "@/components/PostCard";
 
 export default function UserProfile() {
   const [selectedOption, setSelectedOption] = useState(
@@ -40,6 +45,10 @@ export default function UserProfile() {
   const [isFollowing, setIsFollowing] = useState(false); // State to toggle follow/unfollow
   const [visible, setVisible] = useState(false); // State to control dialog visibility
   const [activeTab, setActiveTab] = useState("Posts"); // Default active tab for Posts and Books
+  const { user } = useAuth();
+  const { userId } = useLocalSearchParams();
+  const [loading, setLoading] = useState(true);
+  const [details, setDetails] = useState(null);
   const router = useRouter();
   const showDialog = () => {
     setVisible(true);
@@ -49,19 +58,32 @@ export default function UserProfile() {
     setVisible(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     // Unfollow logic
-    setIsFollowing(false);
+    setIsFollowing(!isFollowing);
+    await toggleFollow(user?.id, userId);
     setVisible(false);
   };
+
+  useEffect(() => {
+    (async () => {
+      const response = await getUserProfile(user?.id, userId);
+      setDetails(response);
+      console.log(response);
+      if (response.iFollow) {
+        setIsFollowing(true);
+      }
+      setLoading(false);
+    })();
+  }, []);
 
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
   });
 
-  if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+  if (loading) {
+    return <Loading />;
   }
 
   return (
@@ -82,11 +104,11 @@ export default function UserProfile() {
           <Image
             style={styles.profilePic}
             source={{
-              uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvYAGFO9U3lykvVLbSZkijiIxT2uRKHxhy6A&s",
+              uri: details.profile_url,
             }}
           />
-          <Text style={styles.userName}>Mr. X Musk (Parody)</Text>
-          <Text style={styles.userHandle}>@mrxmuskus</Text>
+          <Text style={styles.userName}>{details.full_name}</Text>
+          <Text style={styles.userHandle}>@{details.username}</Text>
           <TouchableOpacity
             style={[
               styles.followBtn,
@@ -109,21 +131,20 @@ export default function UserProfile() {
               {isFollowing ? "Unfollow" : "Follow"}
             </Text>
           </TouchableOpacity>
-          <Text style={styles.userBio}>
-            In this account Daily Quotes, Quiz and Tweets. Freedom of Speech. I
-            Love 'X' ❤️
-          </Text>
+          <Text style={styles.userBio}>{details.bio}</Text>
           <View style={styles.metaInfo}>
-            <Text style={styles.metaText}>Entertainment & Recreation</Text>
-            <Text style={styles.metaText}>• Texas, USA</Text>
-            <Text style={styles.metaText}>• Joined November 2024</Text>
+            {/* <Text style={styles.metaText}>Entertainment & Recreation</Text> */}
+            <Text style={styles.metaText}>• {details.location}</Text>
+            <Text style={styles.metaText}>
+              • Joined {formatDateTime(details.createdAt)} •
+            </Text>
           </View>
           <View style={styles.followInfo}>
             <Text style={styles.followText}>
-              <Text style={styles.boldText}>901</Text> Following
+              <Text style={styles.boldText}>{details.following}</Text> Following
             </Text>
             <Text style={styles.followText}>
-              <Text style={styles.boldText}>10.6K</Text> Followers
+              <Text style={styles.boldText}>{details.follower}</Text> Followers
             </Text>
           </View>
         </View>
@@ -164,7 +185,16 @@ export default function UserProfile() {
         {/* Conditional Rendering */}
         {activeTab === "Posts" && (
           <>
-            <ProfilePostCard /> <ProfilePostCard />
+            {details.posts.map((post) => (
+              <PostCard
+                key={post.id}
+                profileUrl={details.profile_url}
+                content={post.content}
+                username={details.username}
+                time={formatDateTime(post.created_at)}
+                userId={userId}
+              />
+            ))}
           </>
         )}
         {activeTab === "Books" && (
@@ -173,7 +203,51 @@ export default function UserProfile() {
               <View style={styles.books}>
                 <Text style={styles.type}>{selectedOption}</Text>
                 <ScrollView style={{ height: hp(70) }}>
-                  <ProfileBookCard />
+                  {selectedOption == "E Books" &&
+                    details.eb_access.map((book) => (
+                      <ProfileBookCard
+                        key={book.bookId}
+                        cover={book.books.cover}
+                        title={book.books.title}
+                        author={book.books.author}
+                      />
+                    ))}
+                  {selectedOption == "Wishlist" &&
+                    details.wishlist.map((book) => (
+                      <TouchableOpacity
+                        onPress={() => {
+                          router.replace(
+                            `/screens/BookDetails?bookId=${book.bookId}`
+                          );
+                        }}
+                      >
+                        <ProfileBookCard
+                          key={book.bookId}
+                          cover={book.books.cover}
+                          title={book.books.title}
+                          author={book.books.author}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  {selectedOption == "Available for exchange" &&
+                    details.exchange_books
+                      .filter((book) => book.available === 1) // Filter books with available == 1
+                      .map((book) => (
+                        <TouchableOpacity
+                          onPress={() => {
+                            router.replace(
+                              `/screens/ExchangeBooksDetails?exchangeId=${book.exchangeId}`
+                            );
+                          }}
+                        >
+                          <ProfileBookCard
+                            key={book.exchangeId}
+                            cover={book.image}
+                            title={book.title}
+                            author={book.description}
+                          />
+                        </TouchableOpacity>
+                      ))}
                 </ScrollView>
               </View>
               <View>
@@ -188,15 +262,11 @@ export default function UserProfile() {
                       customStyles={{ optionText: styles.menuText }}
                     />
                     <MenuOption
-                      onSelect={() => handleSelect("Reading")}
-                      text="Reading"
+                      onSelect={() => handleSelect("E Books")}
+                      text="E Books"
                       customStyles={{ optionText: styles.menuText }}
                     />
-                    <MenuOption
-                      onSelect={() => handleSelect("Read")}
-                      text="Read"
-                      customStyles={{ optionText: styles.menuText }}
-                    />
+
                     <MenuOption
                       onSelect={() => handleSelect("Wishlist")}
                       text="Wishlist"
@@ -223,7 +293,7 @@ export default function UserProfile() {
       {/* Floating Message Icon */}
       <TouchableOpacity
         onPress={() => {
-          router.push("/screens/ChatBox");
+          router.push(`/screens/ChatBox?receiverId=${details.id}`);
         }}
         style={styles.floatingButton}
       >

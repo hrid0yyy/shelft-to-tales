@@ -148,6 +148,7 @@ export default function Ebooks() {
               } else {
                 // claim process
                 handleClaim();
+                bottomSheet.current?.hide();
               }
             }}
           >

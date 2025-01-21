@@ -111,7 +111,7 @@ export default function Profile() {
       <View style={styles.menu}>
         <MenuItem
           icon="book-outline"
-          screen="screens/ExchangeBooks"
+          screen="screens/MyBooks"
           text="My Books"
         />
         <MenuItem

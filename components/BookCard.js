@@ -10,8 +10,10 @@ import {
   OpenSans_400Regular,
   OpenSans_700Bold,
 } from "@expo-google-fonts/open-sans";
+import { useRouter } from "expo-router";
 
-const ProductCard = ({ imageUri, category, title, rating, reviews, price }) => {
+const ProductCard = ({ imageUri, category, title, author, price, bookId }) => {
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
@@ -19,7 +21,6 @@ const ProductCard = ({ imageUri, category, title, rating, reviews, price }) => {
   return (
     <View
       style={{
-        height: hp(25),
         width: wp(43),
         backgroundColor: "white",
         marginRight: wp(4),
@@ -32,10 +33,14 @@ const ProductCard = ({ imageUri, category, title, rating, reviews, price }) => {
           uri: imageUri,
         }}
       />
-      <TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          router.push(`/screens/BookDetails?bookId=${bookId}`);
+        }}
+      >
         <View
           style={{
-            height: hp(10),
+            height: hp(20),
             width: wp(43),
             padding: 4,
           }}
@@ -47,11 +52,11 @@ const ProductCard = ({ imageUri, category, title, rating, reviews, price }) => {
               fontFamily: "OpenSans_400Regular",
             }}
           >
-            {category}
+            {category.split(/[\s,]+/)[0]}
           </Text>
           <Text
             style={{
-              fontSize: hp(1.5),
+              fontSize: hp(1.2),
               fontFamily: "OpenSans_400Regular",
             }}
           >
@@ -59,7 +64,6 @@ const ProductCard = ({ imageUri, category, title, rating, reviews, price }) => {
           </Text>
           <View
             style={{
-              height: hp(4),
               flexDirection: "row",
               padding: 3,
               justifyContent: "space-between",
@@ -75,12 +79,12 @@ const ProductCard = ({ imageUri, category, title, rating, reviews, price }) => {
                   fontFamily: "OpenSans_400Regular",
                 }}
               >
-                {rating} | {reviews}
+                {author}
               </Text>
             </View>
             <Text
               style={{
-                fontSize: hp(1.5),
+                fontSize: hp(1.2),
                 color: "#3c6960",
                 fontFamily: "OpenSans_400Regular",
               }}

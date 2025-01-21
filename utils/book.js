@@ -162,3 +162,23 @@ export const fetchBooks = async (sort = null, search = null) => {
     throw error; // Re-throw the error for the calling function to handle
   }
 };
+
+export const getWishlist = async (userId, search = "") => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/user/book/get_wishlist?userId=${userId}&search=${search}`
+    );
+    const result = await response.json();
+
+    // Handle response or error
+    if (response.ok) {
+      return result.data; // Return the wishlist data
+    } else {
+      console.error("Error fetching wishlist:", result.error);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error in getWishlist function:", error);
+    return null;
+  }
+};

@@ -10,7 +10,7 @@ import {
   FlatList,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker"; // Expo Image Picker, if you're using Expo
 import {
   widthPercentageToDP as wp,
@@ -26,12 +26,29 @@ import Blog from "@/components/Blog";
 import { searchBooksFromImage } from "@/utils/image";
 import Loading from "@/components/Loading";
 import { useRouter } from "expo-router";
+import { fetchNewReleases, fetchDiscounts } from "@/utils/home";
 
 export default function Home() {
   const [imageBook, setImageBook] = useState([]);
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [discountBooks, setDiscountBooks] = useState(null);
+  const [newBooks, setNewBooks] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const discountsBooksData = await fetchDiscounts();
+      setDiscountBooks(discountsBooksData);
+
+      const newBooksData = await fetchNewReleases();
+      setNewBooks(newBooksData);
+
+      setLoading(false);
+    })();
+  }, []);
+
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -68,6 +85,7 @@ export default function Home() {
       title: "A Pocket Full of Rye",
       rating: "4.9",
       reviews: "2336",
+      author: "Me",
       price: "200",
     },
     {
@@ -78,6 +96,7 @@ export default function Home() {
       title: "Gone Girl",
       rating: "4.7",
       reviews: "1890",
+      author: "Me",
       price: "250",
     },
     {
@@ -88,6 +107,7 @@ export default function Home() {
       title: "The Great Gatsby",
       rating: "4.8",
       reviews: "1500",
+      author: "Me",
       price: "300",
     },
     {
@@ -98,6 +118,7 @@ export default function Home() {
       title: "Sherlock Holmes",
       rating: "4.6",
       reviews: "2456",
+      author: "Me",
       price: "180",
     },
     {
@@ -108,6 +129,7 @@ export default function Home() {
       title: "Steve Jobs",
       rating: "4.9",
       reviews: "1800",
+      author: "Me",
       price: "400",
     },
   ];
@@ -201,17 +223,21 @@ export default function Home() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {/* book item */}
 
-            {books.map((book) => (
-              <BookCard
-                key={book.id}
-                imageUri={book.imageUri}
-                category={book.category}
-                title={book.title}
-                rating={book.rating}
-                reviews={book.reviews}
-                price={book.price}
-              />
-            ))}
+            {Array.isArray(newBooks) && newBooks.length > 0 ? (
+              newBooks.map((book) => (
+                <BookCard
+                  key={book.bookId}
+                  imageUri={book.cover}
+                  category={book.genres}
+                  title={book.title}
+                  author={book.author}
+                  price={book.price}
+                  bookId={book.bookId}
+                />
+              ))
+            ) : (
+              <Text>No books found</Text>
+            )}
           </ScrollView>
         </View>
 
@@ -237,19 +263,24 @@ export default function Home() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {/* book item */}
 
-            {books.map((book) => (
-              <BookCard
-                key={book.id}
-                imageUri={book.imageUri}
-                category={book.category}
-                title={book.title}
-                rating={book.rating}
-                reviews={book.reviews}
-                price={book.price}
-              />
-            ))}
+            {Array.isArray(discountBooks) && discountBooks.length > 0 ? (
+              discountBooks.map((book) => (
+                <BookCard
+                  key={book.bookId}
+                  imageUri={book.books.cover}
+                  category={book.books.genres}
+                  title={book.books.title}
+                  author={book.books.author}
+                  price={book.books.price}
+                  bookId={book.bookId}
+                />
+              ))
+            ) : (
+              <Text>No books found</Text>
+            )}
           </ScrollView>
         </View>
+        <View style={{ height: hp(12) }}></View>
       </ScrollView>
       <Modal
         visible={modalVisible}

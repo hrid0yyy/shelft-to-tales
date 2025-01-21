@@ -26,15 +26,20 @@ import { useRouter } from "expo-router";
 import { getEbooks } from "@/utils/ebook";
 import { useAuth } from "@/hooks/AuthContext";
 import Loading from "@/components/Loading";
+import { getWishlist } from "@/utils/book";
 export default function MyEbooks() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
-  const [ebooks, setEbooks] = useState();
+  const [ebooks, setEbooks] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [wishlist, setWishlist] = useState(null);
   useEffect(() => {
     const fetchEbooks = async () => {
       const response = await getEbooks(user?.id, search);
       setEbooks(response);
+      const wish = await getWishlist(user?.id, search);
+      setWishlist(wish);
+      console.log(wish);
       setLoading(false);
     };
     fetchEbooks();
@@ -95,8 +100,36 @@ export default function MyEbooks() {
       return (
         <View style={styles.content}>
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-            <Text style={styles.contentText}>Displaying Wishlist</Text>
-            {/* Add the content or component for Wishlist */}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ flex: 1 }}
+            >
+              {wishlist.map((book) => (
+                <View key={book.bookId} style={{ alignItems: "center" }}>
+                  <View style={styles.bookContent}>
+                    <Image
+                      style={styles.bookCover}
+                      source={{
+                        uri: book.books.cover,
+                      }}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.bookTitle}>{book.books.title}</Text>
+
+                    <TouchableOpacity
+                      style={styles.button}
+                      onPress={() => {
+                        router.push(
+                          `/screens/BookDetails?bookId=${book.bookId}`
+                        );
+                      }}
+                    >
+                      <Feather name="book-open" size={hp(4)} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
           </ScrollView>
         </View>
       );
