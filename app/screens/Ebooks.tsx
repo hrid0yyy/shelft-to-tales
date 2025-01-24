@@ -9,6 +9,7 @@ import {
   Pressable,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
+import { WebView } from "react-native-webview";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -29,21 +30,18 @@ import {
 import { BottomSheet } from "react-native-sheet";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
-import { fetchEbooks, grantAccess } from "@/utils/ebook";
+import { InitEbook, fetchEbooks, grantAccess } from "@/utils/ebook";
 import Loading from "@/components/Loading";
 import { useAuth } from "@/hooks/AuthContext";
+import { shortenText } from "@/utils/text";
 export default function Ebooks() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
   const [ebooks, setEbooks] = useState(null);
 
+  const [webView, setWebView] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState(null);
   const { user } = useAuth();
-  function truncateText(text, maxLength = 50) {
-    if (text?.length <= maxLength) {
-      return text; // Return the original text if it's within the limit
-    }
-    return text?.slice(0, maxLength) + "..."; // Truncate and add ellipsis
-  }
 
   useEffect(() => {
     const fetch = async () => {
@@ -54,7 +52,46 @@ export default function Ebooks() {
   }, [search, sort]);
   const router = useRouter();
   const bottomSheet = useRef<BottomSheetRef>(null);
-  const [details, setDetails] = useState();
+  const [details, setDetails] = useState(null);
+
+  const onNavigationStateChange = async (navState) => {
+    // Check if the current URL is the success URL
+    if (navState.url.includes("http://localhost:3030/success")) {
+      // Payment successful
+      console.log("Payment successful!");
+      setWebView(false);
+      // Handle success (e.g., update UI, navigate to another screen)
+      bottomSheet.current?.hide();
+      handleClaim();
+      showMessage({
+        message: "Shelf to tales",
+        description: "Payment Successfull",
+        type: "success",
+      });
+    } else if (navState.url.includes("http://localhost:3030/fail")) {
+      // Payment failed
+      console.log("Payment failed.");
+      setWebView(false);
+      // Handle failure (e.g., show failure message)
+      bottomSheet.current?.hide();
+      showMessage({
+        message: "Shelf to tales",
+        description: "Payment Failed",
+        type: "danger",
+      });
+    } else if (navState.url.includes("http://localhost:3030/cancel")) {
+      // Payment canceled
+      console.log("Payment was canceled.");
+      setWebView(false);
+      // Handle cancel (e.g., show cancel message)
+      bottomSheet.current?.hide();
+      showMessage({
+        message: "Shelf to tales",
+        description: "Payment Cancelled",
+        type: "danger",
+      });
+    }
+  };
 
   const handleClaim = async () => {
     const response = await grantAccess(user?.id, details?.bookId);
@@ -80,6 +117,21 @@ export default function Ebooks() {
   if (ebooks == null) {
     return <Loading />;
   }
+
+  if (webView) {
+    return (
+      <WebView
+        source={{ uri: paymentUrl }}
+        style={{ flex: 1 }}
+        onError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          //  console.error("WebView error: ", nativeEvent);
+        }}
+        onNavigationStateChange={onNavigationStateChange}
+      />
+    );
+  }
+
   return (
     <View style={styles.container}>
       <BottomSheet height={600} ref={bottomSheet}>
@@ -111,7 +163,8 @@ export default function Ebooks() {
               fontFamily: "OpenSans_400Regular",
             }}
           >
-            {truncateText(details?.description, 250) || ""}
+            {details && shortenText(details?.description, 150)}
+            {/* {shortenText(details?.description)} */}
           </Text>
 
           <Text
@@ -142,9 +195,12 @@ export default function Ebooks() {
               borderRadius: hp(3),
               marginTop: hp(3),
             }}
-            onPress={() => {
+            onPress={async () => {
               if (details?.price > 0) {
                 // payment process
+                const response = await InitEbook(user?.id, details?.bookId);
+                setPaymentUrl(response?.url);
+                setWebView(true);
               } else {
                 // claim process
                 handleClaim();
@@ -248,6 +304,7 @@ export default function Ebooks() {
             </View>
           ))}
         </View>
+        <View style={{ height: hp(15) }}></View>
       </ScrollView>
       <TouchableOpacity
         onPress={() => {

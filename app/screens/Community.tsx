@@ -201,16 +201,18 @@ export default function Community() {
 
         {activeTab === "New" &&
           (allPosts?.length > 0 ? (
-            allPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                profileUrl={post.users.profile_url}
-                content={post.content}
-                username={post.users.username}
-                time={formatDateTime(post.created_at)}
-                userId={post.users.id}
-              />
-            ))
+            allPosts.map((post) =>
+              post.users.id != user?.id ? (
+                <PostCard
+                  key={post.id}
+                  profileUrl={post.users.profile_url}
+                  content={post.content}
+                  username={post.users.username}
+                  time={formatDateTime(post.created_at)}
+                  userId={post.users.id}
+                />
+              ) : null
+            )
           ) : (
             <Text
               style={{

@@ -14,6 +14,7 @@ export const NotificationContextProvider = ({ children }) => {
   const [requests, setRequests] = useState(null);
   const [totalRequests, setTotalRequests] = useState();
   const [messages, setMessages] = useState();
+  const [totalUnseenMessage, setTotalUnseenMessage] = useState();
   // Create a thread-like effect using a polling interval
   useEffect(() => {
     if (user?.id) {
@@ -38,10 +39,21 @@ export const NotificationContextProvider = ({ children }) => {
 
       const messagesData = await fetchInbox(user?.id);
       setMessages(messagesData);
+      const unseen = countUnseenMessages(user?.id, messagesData);
+      setTotalUnseenMessage(unseen);
     } catch (error) {
       console.error("Error fetching notifications:", error);
       return { success: false, error: error.message };
     }
+  }
+
+  function countUnseenMessages(userId, data) {
+    return data.reduce((count, item) => {
+      if (item.senderId !== userId && item.status === "unseen") {
+        return count + 1;
+      }
+      return count;
+    }, 0);
   }
 
   return (
@@ -52,6 +64,7 @@ export const NotificationContextProvider = ({ children }) => {
         totalRequests,
         requests,
         messages,
+        totalUnseenMessage,
       }}
     >
       {children}

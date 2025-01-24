@@ -27,7 +27,6 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import Dialog from "react-native-dialog";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons"; // Import the message icon
 import Ionicons from "@expo/vector-icons/Ionicons";
-import ProfilePostCard from "@/components/ProfilePostCard";
 import ProfileBookCard from "@/components/ProfileBookCard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/hooks/AuthContext";
@@ -61,7 +60,7 @@ export default function UserProfile() {
   const handleDelete = async () => {
     // Unfollow logic
     setIsFollowing(!isFollowing);
-    await toggleFollow(user?.id, userId);
+    await toggleFollow(user?.id, userId, user?.username);
     setVisible(false);
   };
 
@@ -119,6 +118,9 @@ export default function UserProfile() {
                 showDialog(); // Show dialog on Unfollow
               } else {
                 setIsFollowing(true); // Follow directly
+                (async () => {
+                  await toggleFollow(user?.id, userId, user?.username);
+                })();
               }
             }}
           >

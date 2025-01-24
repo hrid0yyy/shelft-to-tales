@@ -116,12 +116,12 @@ export default function Profile() {
         />
         <MenuItem
           icon="receipt-outline"
-          screen="screens/ExchangeBooks"
+          screen="screens/PurchaseHistory"
           text="Purchase History"
         />
         <MenuItem
           icon="location-outline"
-          screen="screens/ExchangeBooks"
+          screen="screens/TrackOrder"
           text="Track Order"
         />
         <MenuItem

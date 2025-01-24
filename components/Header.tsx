@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -21,9 +21,24 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import { useRouter } from "expo-router";
 import { useNotification } from "@/hooks/NotificationContext";
+import { fetchCart } from "@/utils/cart";
+import { useAuth } from "@/hooks/AuthContext";
 export default function Header() {
   const router = useRouter();
+  const { totalNotification, totalRequests, totalUnseenMessage } =
+    useNotification();
+  const [notification, setNotification] = useState(0);
+  const [cart, setCart] = useState(0);
+  const { user } = useAuth();
 
+  useEffect(() => {
+    (async () => {
+      const data = await fetchCart(user.id);
+      setCart(data.cart.length);
+      const total = totalNotification + totalRequests + totalUnseenMessage;
+      setNotification(total);
+    })();
+  }, [totalNotification, totalRequests, totalUnseenMessage]);
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
@@ -52,6 +67,12 @@ export default function Header() {
             style={{ marginRight: wp(8) }}
             color="black"
           />
+
+          {notification > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{notification}</Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -60,6 +81,12 @@ export default function Header() {
           }}
         >
           <SimpleLineIcons name="handbag" size={hp(3)} color="black" />{" "}
+          {cart > 0 && (
+            <View style={styles.badge}>
+              {" "}
+              <Text style={styles.badgeText}>{cart}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -109,5 +136,19 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     alignItems: "center",
     gap: wp(4),
+  },
+  badge: {
+    height: hp(2),
+    aspectRatio: 1,
+    backgroundColor: "red",
+    borderRadius: 100,
+    position: "absolute",
+    top: -hp(1),
+    left: wp(3),
+  },
+  badgeText: {
+    fontSize: hp(1.2),
+    color: "white",
+    textAlign: "center",
   },
 });

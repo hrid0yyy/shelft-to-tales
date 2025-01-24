@@ -6,8 +6,10 @@ import {
   Image,
   Pressable,
   TextInput,
+  ScrollView,
 } from "react-native";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -20,19 +22,84 @@ import {
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/AuthContext";
+import { updateProfile } from "@/utils/profile";
+import { uploadImageToServer } from "@/utils/image";
+import { showMessage, hideMessage } from "react-native-flash-message";
+import Loading from "@/components/Loading";
 export default function EditProfile() {
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
   });
   const router = useRouter();
-  const { user } = useAuth();
-  const username = useRef();
-  const location = useRef();
-  const mobileNumber = useRef();
-  const fullName = useRef();
+  const [image, setImage] = useState(null);
+  const { user, up, setUp } = useAuth();
+  const username = useRef(user?.username);
+  const location = useRef(user?.location);
+  const mobileNumber = useRef(user?.mobile_number);
+  const fullName = useRef(user?.full_name);
+  const bio = useRef(user?.bio);
+  const profileUrl = useRef(user?.profile_url);
+  const [loading, setLoading] = useState(false);
+
+  const updateUser = async () => {
+    setLoading(true);
+    if (image) {
+      const img = await uploadImageToServer(image);
+      profileUrl.current = img;
+      console.log(img);
+    }
+    const updateFields = {
+      username: username.current.trim(),
+      location: location.current.trim(),
+      mobile_number: mobileNumber.current.trim(),
+      full_name: fullName.current.trim(),
+      bio: bio.current.trim(),
+      profile_url: profileUrl.current,
+    };
+
+    const response = await updateProfile(user?.id, updateFields);
+    setUp(!up);
+    setLoading(false);
+    if (response.success) {
+      showMessage({
+        message: "Shelf to tales",
+        description: "Profile Edited Successfully",
+        type: "success",
+      });
+    } else {
+      showMessage({
+        message: "Shelf to tales",
+        description: "Something went wrong",
+        type: "danger",
+      });
+    }
+  };
+
+  const pickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      alert("Permission required");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  if (loading) {
+    return <Loading />;
+  }
   return (
-    <View>
+    <ScrollView>
       <View style={styles.topBar}>
         <TouchableOpacity
           onPress={() => {
@@ -44,54 +111,75 @@ export default function EditProfile() {
       </View>
       <Text style={styles.editText}>Edit Profile </Text>
       <View style={styles.editContainer}>
-        <Image
-          style={styles.pic}
-          source={{
-            uri: user.profile_url,
-          }}
-        />
-        <TouchableOpacity>
+        {image ? (
+          <Image
+            style={styles.pic}
+            source={{
+              uri: image,
+            }}
+          />
+        ) : (
+          <Image
+            style={styles.pic}
+            source={{
+              uri: user.profile_url,
+            }}
+          />
+        )}
+
+        <TouchableOpacity onPress={pickImage}>
           <Text style={styles.changePicText}>Change profile picture</Text>
         </TouchableOpacity>
       </View>
+
       <View style={styles.inp}>
         <View>
-          <Text style={styles.txt}>Username</Text>
+          <Text style={styles.txt}>User name</Text>
           <TextInput
-            placeholder="Enter Username"
-            value={user.username}
+            placeholder={user?.username}
             style={styles.inpBox}
+            onChangeText={(e) => (username.current = e)}
           />
         </View>
         <View>
           <Text style={styles.txt}>Full Name</Text>
           <TextInput
-            placeholder="Enter Full Name"
-            value={user.full_name}
+            placeholder={user?.full_name}
             style={styles.inpBox}
+            onChangeText={(e) => (fullName.current = e)}
           />
         </View>
         <View>
           <Text style={styles.txt}>Location</Text>
           <TextInput
-            placeholder="Enter Location"
-            value={user.location}
+            placeholder={user?.location}
             style={styles.inpBox}
+            onChangeText={(e) => (location.current = e)}
           />
         </View>
         <View>
           <Text style={styles.txt}>Mobile Number</Text>
           <TextInput
-            placeholder="Enter Mobile Number"
-            value={user.mobile_number}
+            placeholder={user?.mobile_number}
             style={styles.inpBox}
+            onChangeText={(e) => (mobileNumber.current = e)}
+          />
+        </View>
+        <View>
+          <Text style={styles.txt}>Bio</Text>
+          <TextInput
+            placeholder={user?.bio}
+            style={styles.inpBox}
+            onChangeText={(e) => (bio.current = e)}
           />
         </View>
       </View>
-      <TouchableOpacity style={styles.saveBtn}>
+      <View style={{ height: hp(12) }}></View>
+      <TouchableOpacity onPress={updateUser} style={styles.saveBtn}>
         <Text style={styles.saveTxt}>Save</Text>
       </TouchableOpacity>
-    </View>
+      <View style={{ height: hp(3) }}></View>
+    </ScrollView>
   );
 }
 const styles = StyleSheet.create({

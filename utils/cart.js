@@ -97,7 +97,7 @@ export const fetchCart = async (userId) => {
     }
 
     const data = await response.json();
-    console.log("Cart fetched successfully", data.cart);
+
     return data;
   } catch (error) {
     console.error("Error fetching cart:", error.message);

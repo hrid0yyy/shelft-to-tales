@@ -1,5 +1,21 @@
 import { API_BASE_URL } from "../config";
 
+export const InitEbook = async (userId, bookId) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/user/payment/init-ebook?userId=${userId}&bookId=${bookId}`
+    );
+    // Parse the response JSON even if the status is not OK
+    const data = await response.json();
+
+    // Return the data if no error
+    return data;
+  } catch (error) {
+    console.error("Error calling /init API:", error.message);
+    throw error;
+  }
+};
+
 export const grantAccess = async (userId, bookId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/user/ebooks/redeem`, {

@@ -7,11 +7,15 @@ import {
   TouchableOpacity,
   FlatList,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { WebView } from "react-native-webview";
+import { showMessage, hideMessage } from "react-native-flash-message";
+import { Init, placeOrder } from "@/utils/payment";
 import {
   useFonts,
   OpenSans_400Regular,
@@ -26,16 +30,109 @@ const ShoppingCart = () => {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState();
   const [cartUpdated, setCartUpdated] = useState(false); // State to track cart updates
+
+  const [showWebView, setShowWebView] = React.useState(false);
+  const [paymentUrl, setPaymentUrl] = useState(null);
+
   useEffect(() => {
     const fetch = async () => {
       const data = await fetchCart(user.id);
       setItems(data.cart);
+
       setTotal(data.totalPrice);
-      console.log(data.cart);
     };
     fetch();
   }, [cartUpdated]);
   const router = useRouter();
+
+  const getPaymentUrl = async () => {
+    const data = await Init(
+      user?.id,
+      user?.mobile_number,
+      user?.location,
+      user?.full_name,
+      user?.email
+    );
+    if (!data.success) {
+      showMessage({
+        message: "Shelf to tales",
+        description: data.message,
+        type: "danger",
+      });
+      return;
+    }
+    setPaymentUrl(data.url);
+    setShowWebView(true);
+  };
+
+  const cashOnDelivery = async () => {
+    const response = await placeOrder(user?.id, user?.location);
+    if (items.length == 0) {
+      showMessage({
+        message: "Shelf to tales",
+        description: "Cart Is Empty",
+        type: "danger",
+      });
+      return;
+    }
+    if (response) {
+      showMessage({
+        message: "Shelf to tales",
+        description: "Order Placed Successfully",
+        type: "success",
+      });
+    } else {
+      showMessage({
+        message: "Shelf to tales",
+        description: "Payment Failed",
+        type: "danger",
+      });
+    }
+  };
+
+  const onNavigationStateChange = async (navState) => {
+    // Check if the current URL is the success URL
+    if (navState.url.includes("http://localhost:3030/success")) {
+      // Payment successful
+      console.log("Payment successful!");
+      setShowWebView(false);
+      // Handle success (e.g., update UI, navigate to another screen)
+      const response = await placeOrder(user?.id, user?.location);
+      if (response) {
+        showMessage({
+          message: "Shelf to tales",
+          description: "Payment Successfull",
+          type: "success",
+        });
+      } else {
+        showMessage({
+          message: "Shelf to tales",
+          description: "Payment Failed",
+          type: "danger",
+        });
+      }
+    } else if (navState.url.includes("http://localhost:3030/fail")) {
+      // Payment failed
+      console.log("Payment failed.");
+      setShowWebView(false);
+      // Handle failure (e.g., show failure message)
+      showMessage({
+        message: "Shelf to tales",
+        description: "Payment Failed",
+        type: "danger",
+      });
+    } else if (navState.url.includes("http://localhost:3030/cancel")) {
+      // Payment canceled
+      console.log("Payment was canceled.");
+      setShowWebView(false);
+      // Handle cancel (e.g., show cancel message)
+      showMessage({
+        message: "Shelf to tales",
+        description: "Payment Cancelled",
+        type: "danger",
+      });
+    }
+  };
 
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
@@ -44,6 +141,19 @@ const ShoppingCart = () => {
 
   if (!fontsLoaded) {
     return null;
+  }
+  if (showWebView) {
+    return (
+      <WebView
+        source={{ uri: paymentUrl }}
+        style={{ flex: 1 }}
+        onError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          //  console.error("WebView error: ", nativeEvent);
+        }}
+        onNavigationStateChange={onNavigationStateChange}
+      />
+    );
   }
 
   return (
@@ -103,11 +213,11 @@ const ShoppingCart = () => {
         <Text style={styles.note}>(Total does not include shipping)</Text>
       </View>
 
-      <TouchableOpacity style={styles.checkoutButton}>
+      <TouchableOpacity style={styles.checkoutButton} onPress={cashOnDelivery}>
         <Text style={styles.checkoutText}>Cash on delivery</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.bkashButton}>
+      <TouchableOpacity style={styles.bkashButton} onPress={getPaymentUrl}>
         <Text style={styles.bkashText}>
           {/* Check out with <Text style={styles.paypalBold}>PayPal</Text> */}
           Check out with{" "}

@@ -3,26 +3,41 @@ import { API_BASE_URL } from "../config";
 
 const API_URL = `${API_BASE_URL}/api/v1/user/profile`;
 
-// Function to update user details
-export async function updateUser(id, updates) {
+export async function updateProfile(id, updateFields) {
   try {
+    // Ensure the ID and fields are provided
+    if (!id) {
+      throw new Error("User ID is required");
+    }
+    console.log(updateFields);
+    // Make the API request
     const response = await fetch(`${API_URL}/update`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id, updates }),
+      body: JSON.stringify({ id, ...updateFields }),
     });
 
+    // Parse the response
     const result = await response.json();
 
-    if (response.ok) {
-      console.log("User updated successfully:", result.user);
-    } else {
-      console.error("Error updating user:", result.error);
+    // Handle errors
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to update user");
     }
+
+    // Return the result
+    return {
+      success: true,
+      user: result.user,
+    };
   } catch (error) {
-    console.error("Error in updateUser:", error);
+    console.error("Error updating user:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
   }
 }
 
@@ -45,14 +60,14 @@ export async function getUserProfile(ownId, userId) {
 }
 
 // Function to toggle follow status
-export async function toggleFollow(follower, following) {
+export async function toggleFollow(follower, following, username) {
   try {
     const response = await fetch(`${API_URL}/toggle-follow`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ follower, following }),
+      body: JSON.stringify({ follower, following, username }),
     });
 
     const result = await response.json();

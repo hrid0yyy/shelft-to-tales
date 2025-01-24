@@ -7,10 +7,10 @@ export const AuthContextProvider = ({ children }) => {
   const [isAuthenticated, setisAuthenticated] = useState(false);
   const [token, setToken] = useState();
   const [user, setUser] = useState();
-
+  const [up, setUp] = useState(false);
   useEffect(() => {
     verifyToken();
-  }, [token]);
+  }, [token, up]);
 
   const getToken = async () => {
     const token = (await AsyncStorage.getItem("authToken")) || "no_token";
@@ -105,7 +105,7 @@ export const AuthContextProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ signin, isAuthenticated, signOut, user, signup }}
+      value={{ signin, isAuthenticated, signOut, user, signup, setUp, up }}
     >
       {children}
     </AuthContext.Provider>

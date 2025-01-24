@@ -21,13 +21,19 @@ import { useAuth } from "@/hooks/AuthContext";
 import { formatDateTime } from "@/utils/time";
 
 export default function Notification() {
-  const { totalNotification, notification, totalRequests, requests, messages } =
-    useNotification();
+  const {
+    totalNotification,
+    notification,
+    totalRequests,
+    requests,
+    messages,
+    totalUnseenMessage,
+  } = useNotification();
   const { user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Inbox"); // Default to Inbox
   const [unreadCounts, setUnreadCounts] = useState({
-    Inbox: 3,
+    Inbox: totalUnseenMessage,
     ExchangeRequests: totalRequests,
     TrackOrders: 1,
     Notifications: totalNotification,

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -15,17 +15,43 @@ import {
   useFonts,
   OpenSans_400Regular,
   OpenSans_700Bold,
+  OpenSans_300Light_Italic,
+  OpenSans_400Regular_Italic,
 } from "@expo-google-fonts/open-sans";
 import { MaterialIcons } from "@expo/vector-icons"; // Vector icon library
 import { useRouter } from "expo-router";
-import { useAuth } from "@/hooks/AuthContext";
-import { fetchNotifications } from "@/utils/notification";
 
+import { API_BASE_URL } from "../config";
 const Index = () => {
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
+    OpenSans_300Light_Italic,
+    OpenSans_400Regular_Italic,
   });
+  const [data, setData] = useState();
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/stats`); // Replace with your server's URL if different
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // You can return the data if needed for further processing
+        setData(data);
+        return;
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+        return null;
+      }
+    }
+
+    // Example usage
+    fetchStats();
+  }, []);
 
   const router = useRouter();
 
@@ -42,9 +68,24 @@ const Index = () => {
 
       {/* Text Section */}
       <View style={styles.textContainer}>
-        <Text style={[styles.title, { fontFamily: "OpenSans_700Bold" }]}>
-          Read any book or novel from all over the world
-        </Text>
+        <Image
+          source={require("@/assets/images/logo.png")} // Replace with your abstract image path
+          style={styles.abstractLogo}
+          resizeMode="contain"
+        />
+        <View style={styles.statContainer}>
+          <View style={styles.stat}>
+            <Text style={styles.statText}>
+              Active users: {data?.totalUsers},
+            </Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statText}>Books: {data?.totalBooks},</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statText}>E Books: {data?.totalEbooks}</Text>
+          </View>
+        </View>
         <Text style={[styles.subtitle, { fontFamily: "OpenSans_400Regular" }]}>
           Explore all your interests from any book all over the world
         </Text>
@@ -77,7 +118,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp("3%"),
   },
   imageContainer: {
-    flex: 0.6, // Increase the size of the image container
+    flex: 0.45, // Increase the size of the image container
     alignItems: "center",
     justifyContent: "center",
   },
@@ -85,6 +126,9 @@ const styles = StyleSheet.create({
     width: wp("90%"), // Make the image larger
     height: hp("40%"),
     borderRadius: wp("5%"), // Optional: rounded corners for the image
+  },
+  abstractLogo: {
+    width: wp(25),
   },
   textContainer: {
     flex: 0.2, // Reduce the height for the text container
@@ -119,6 +163,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
     borderRadius: wp("5%"),
     padding: wp("2%"),
+  },
+  statContainer: {
+    height: hp(6),
+    width: wp(80),
+    flexDirection: "row",
+    gap: wp(2),
+
+    alignItems: "center",
+  },
+  stat: {
+    height: hp(7),
+
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  statText: {
+    color: "#3c6960",
+    fontSize: hp(1.5),
+    fontFamily: "OpenSans_300Light_Italic",
   },
 });
 
