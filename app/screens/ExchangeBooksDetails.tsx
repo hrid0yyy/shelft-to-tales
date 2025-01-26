@@ -113,7 +113,7 @@ export default function ExchangeBooksDetails() {
             />
             <TouchableOpacity
               onPress={() => {
-                router.push("/screens/UserProfile");
+                router.push(`/screens/UserProfile?userId=${item.userId}`);
               }}
             >
               <View style={{ marginLeft: hp(2), gap: hp(0.5), width: wp(50) }}>
@@ -156,7 +156,7 @@ export default function ExchangeBooksDetails() {
         >
           <TouchableOpacity
             onPress={() => {
-              router.push("/screens/ChatBox");
+              router.push(`/screens/ChatBox?receiverId=${item.userId}`);
             }}
             style={{
               height: hp(6),

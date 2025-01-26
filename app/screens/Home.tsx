@@ -76,63 +76,6 @@ export default function Home() {
     }
   };
 
-  const books = [
-    {
-      id: "1",
-      imageUri:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSLAZFTYVblAga66_m4x6DnO6HPjoWmnpvT-g&s",
-      category: "Novel",
-      title: "A Pocket Full of Rye",
-      rating: "4.9",
-      reviews: "2336",
-      author: "Me",
-      price: "200",
-    },
-    {
-      id: "2",
-      imageUri:
-        "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1554086139l/19288043.jpg",
-      category: "Thriller",
-      title: "Gone Girl",
-      rating: "4.7",
-      reviews: "1890",
-      author: "Me",
-      price: "250",
-    },
-    {
-      id: "3",
-      imageUri:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfCMF6J0AmLCF_qVsE1R02ZdxU3lFcLEkRYw&s",
-      category: "Fiction",
-      title: "The Great Gatsby",
-      rating: "4.8",
-      reviews: "1500",
-      author: "Me",
-      price: "300",
-    },
-    {
-      id: "4",
-      imageUri:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStLO_ZtUzQ9uAp6mHBmti5G7sLSm3WngH7og&s",
-      category: "Mystery",
-      title: "Sherlock Holmes",
-      rating: "4.6",
-      reviews: "2456",
-      author: "Me",
-      price: "180",
-    },
-    {
-      id: "5",
-      imageUri:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8XBJZhbEENbh4udfRDnmuS0HeRyEtMRFPmg&s",
-      category: "Biography",
-      title: "Steve Jobs",
-      rating: "4.9",
-      reviews: "1800",
-      author: "Me",
-      price: "400",
-    },
-  ];
   const [fontsLoaded] = useFonts({
     OpenSans_400Regular,
     OpenSans_700Bold,
@@ -193,12 +136,17 @@ export default function Home() {
             />
             <Text style={styles.featureText}> Image Search!</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.feature}>
+          <TouchableOpacity
+            style={styles.feature}
+            onPress={() => {
+              router.push("/screens/ExchangeMap");
+            }}
+          >
             <Image
               style={styles.featureImage}
               source={require("@/assets/images/borrow.png")}
             />
-            <Text style={styles.featureText}>Borrow Book!</Text>
+            <Text style={styles.featureText}>Exchange Book!</Text>
           </TouchableOpacity>
         </View>
         {/* best seller section */}

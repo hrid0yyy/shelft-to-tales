@@ -2,9 +2,8 @@
 
 # dependencies
 node_modules/
-
+getMyLocation.txt
 # Expo
-config.js
 .expo/
 dist/
 web-build/

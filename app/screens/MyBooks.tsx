@@ -35,15 +35,23 @@ export default function MyEbooks() {
   const [wishlist, setWishlist] = useState(null);
   useEffect(() => {
     const fetchEbooks = async () => {
-      const response = await getEbooks(user?.id, search);
-      setEbooks(response);
-      const wish = await getWishlist(user?.id, search);
-      setWishlist(wish);
-      console.log(wish);
-      setLoading(false);
+      try {
+        const response = await getEbooks(user?.id, search);
+        setEbooks(response);
+        const wish = await getWishlist(user?.id, search);
+        setWishlist(wish);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
-    fetchEbooks();
-  }, []);
+
+    // Set an interval to fetch data every 5 seconds
+    const intervalId = setInterval(fetchEbooks, 1000);
+
+    // Cleanup function to clear the interval when the component unmounts
+    return () => clearInterval(intervalId);
+  }, [search, user?.id]); // Include dependencies if needed
 
   const router = useRouter();
 
@@ -59,7 +67,7 @@ export default function MyEbooks() {
       return (
         <View style={styles.content}>
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-            {ebooks.map((book) => (
+            {ebooks?.map((book) => (
               <View key={book.bookId} style={{ alignItems: "center" }}>
                 <View style={styles.bookContent}>
                   <Image

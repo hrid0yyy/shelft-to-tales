@@ -30,7 +30,7 @@ const ShoppingCart = () => {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState();
   const [cartUpdated, setCartUpdated] = useState(false); // State to track cart updates
-
+  const [purchase, setPurchase] = useState(false);
   const [showWebView, setShowWebView] = React.useState(false);
   const [paymentUrl, setPaymentUrl] = useState(null);
 
@@ -42,7 +42,7 @@ const ShoppingCart = () => {
       setTotal(data.totalPrice);
     };
     fetch();
-  }, [cartUpdated]);
+  }, [cartUpdated, purchase]);
   const router = useRouter();
 
   const getPaymentUrl = async () => {
@@ -81,6 +81,7 @@ const ShoppingCart = () => {
         description: "Order Placed Successfully",
         type: "success",
       });
+      setPurchase((e) => !e);
     } else {
       showMessage({
         message: "Shelf to tales",
@@ -104,6 +105,7 @@ const ShoppingCart = () => {
           description: "Payment Successfull",
           type: "success",
         });
+        setPurchase((e) => !e);
       } else {
         showMessage({
           message: "Shelf to tales",
@@ -224,9 +226,7 @@ const ShoppingCart = () => {
         </Text>
         <Image
           style={{ height: hp(3), width: wp(20) }}
-          source={{
-            uri: "https://freepnglogo.com/images/all_img/1701541855%E0%A6%AC%E0%A6%BF%E0%A6%95%E0%A6%BE%E0%A6%B6-%E0%A6%B2%E0%A6%97%E0%A7%8B.png",
-          }}
+          source={require("@/assets/images/ssl.png")}
         />
       </TouchableOpacity>
 

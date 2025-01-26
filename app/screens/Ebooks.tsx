@@ -193,7 +193,7 @@ export default function Ebooks() {
               backgroundColor: "#3c6960",
               justifyContent: "center",
               borderRadius: hp(3),
-              marginTop: hp(3),
+              marginTop: hp(1),
             }}
             onPress={async () => {
               if (details?.price > 0) {
@@ -278,7 +278,7 @@ export default function Ebooks() {
             gap: hp(3),
           }}
         >
-          {ebooks.map((book) => (
+          {ebooks?.map((book) => (
             <View key={book.bookId} style={styles.book}>
               <Image
                 style={styles.image}
@@ -374,9 +374,9 @@ const styles = StyleSheet.create({
     marginLeft: hp(1),
   },
   book: {
-    height: hp(20),
-    width: wp(70),
     flexDirection: "row",
+    padding: 15,
+    elevation: 3,
   },
   details: {
     marginLeft: hp(1),
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     marginTop: hp(2),
   },
   title: {
-    fontSize: hp(2),
+    fontSize: hp(1.8),
     width: wp(40),
     fontFamily: "OpenSans_400Regular",
   },
@@ -399,8 +399,9 @@ const styles = StyleSheet.create({
     height: hp(5),
     width: wp(30),
     justifyContent: "center",
-    position: "fixed",
-    top: hp(4),
+    position: "absolute",
+    bottom: 0,
+    right: 0,
   },
   buttonText: {
     fontSize: hp(1.5),
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
     fontFamily: "OpenSans_400Regular",
   },
   image: {
-    width: hp(20),
+    height: hp(18.5),
     aspectRatio: 1,
   },
 });

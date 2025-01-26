@@ -6,7 +6,8 @@ export const addExchangeBook = async (
   location,
   description,
   prefItem,
-  image
+  image,
+  map
 ) => {
   try {
     // Define the API endpoint
@@ -20,6 +21,7 @@ export const addExchangeBook = async (
       description,
       prefItem,
       image,
+      map,
     };
 
     // Make the POST request
@@ -250,3 +252,22 @@ export async function respondToExchangeRequest(
     return { success: false, error: error.message };
   }
 }
+
+export const fetchMapData = async (userId) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/user/exchange/map?userId=${userId}`
+    ); // Replace with your actual API URL
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    return data; // Return the data for further processing
+  } catch (error) {
+    console.error("Error fetching map data:", error);
+    return null; // Handle the error case
+  }
+};

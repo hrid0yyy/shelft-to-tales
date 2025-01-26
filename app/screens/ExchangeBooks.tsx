@@ -27,6 +27,7 @@ import {
 import { useAuth } from "@/hooks/AuthContext";
 import { formatDateTime } from "@/utils/time";
 import { OpenSans_400Regular } from "@expo-google-fonts/open-sans";
+import Map from "@/components/Map";
 export default function ExchangeBooks() {
   const router = useRouter();
   const titleRef = useRef("");
@@ -39,12 +40,15 @@ export default function ExchangeBooks() {
   const [add, setAdd] = useState(false);
   const [requests, setRequests] = useState([]);
   const [response, setResponse] = useState(false);
+  const [cancel, setCancel] = useState(false);
+  const [map, setMap] = useState();
   useEffect(() => {
     (async () => {
       const response = await fetchExchangeBooks(user.id);
       setEbooks(response);
       const data = await getExchangeRequests(user.id);
       setRequests(data);
+      console.log(data);
     })();
   }, [add, response]);
 
@@ -113,7 +117,8 @@ export default function ExchangeBooks() {
       locationRef.current,
       descriptionRef.current,
       prefRef.current,
-      url
+      url,
+      map
     );
     if (response) {
       alert("Successfully uploaded");
@@ -163,7 +168,7 @@ export default function ExchangeBooks() {
             <TouchableOpacity
               style={styles.button}
               onPress={() => {
-                router.push(`/screens/UserProfile`);
+                router.push(`/screens/UserProfile?userId=${item.sender_id}`);
               }}
             >
               <Text style={styles.buttonText}>Profile</Text>
@@ -207,6 +212,10 @@ export default function ExchangeBooks() {
       )}
     />
   );
+
+  if (cancel) {
+    return <Map cancelBtn={setCancel} setMap={setMap} />;
+  }
 
   return (
     <View style={styles.container}>
@@ -267,12 +276,20 @@ export default function ExchangeBooks() {
       <Modal
         visible={modalVisible}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalHeader}>Add New Book</Text>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={() => {
+                setCancel(true);
+              }}
+            >
+              <Text style={styles.uploadButtonText}>Pick Location</Text>
+            </TouchableOpacity>
             <TextInput
               style={styles.input}
               placeholder="Title"
@@ -293,9 +310,10 @@ export default function ExchangeBooks() {
               placeholder="Preferred Item"
               onChangeText={(value) => (prefRef.current = value.trim())}
             />
+
             <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
               <Text style={styles.uploadButtonText}>
-                {newBook.image ? "Change Image" : "Upload Image"}
+                {image ? "Change Image" : "Upload Image"}
               </Text>
             </TouchableOpacity>
 

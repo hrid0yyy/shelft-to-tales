@@ -5,21 +5,11 @@ import Books from "./Books";
 import Community from "./Community";
 import Profile from "./Profile";
 import Home from "./Home";
+
 import Header from "@/components/Header";
-import { fetchNotifications } from "@/utils/notification";
+
 import { useAuth } from "@/hooks/AuthContext";
 export default function App() {
-  const [notification, setNotification] = useState(null);
-  const { user } = useAuth();
-  useEffect(() => {
-    const loadNotification = async () => {
-      const response = await fetchNotifications(user.id);
-      setNotification(response.data);
-      console.log(response.data);
-    };
-    // setInterval(loadNotification, 1000);
-  }, []);
-
   const [screen, setScreen] = useState("Home");
   if (screen == "Home") {
     return (

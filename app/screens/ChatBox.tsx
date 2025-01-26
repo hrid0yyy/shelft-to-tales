@@ -76,6 +76,8 @@ export default function ChatBox() {
       }
       if (senderId != user?.id) {
         setIsSeen(true);
+      } else {
+        setIsSeen(false);
       }
       console.log("isSeen :", isSeen);
       setLastId(lastMessageId);
@@ -166,7 +168,7 @@ export default function ChatBox() {
         />
         <TouchableOpacity
           onPress={() => {
-            router.push("/screens/UserProfile");
+            router.push(`/screens/UserProfile?userId=${receiver?.id}`);
           }}
         >
           <Text style={styles.profileName}>{receiver?.username}</Text>

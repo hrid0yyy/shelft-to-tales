@@ -23,10 +23,10 @@ export default function Ebooks() {
     OpenSans_300Light_Italic,
   });
 
-  const router = useRouter();
   const { user } = useAuth();
   const pageRef = useRef("");
   const { bookId, url, pageAt, title } = useLocalSearchParams();
+
   useEffect(() => {
     pageRef.current = pageAt;
   }, []);
@@ -216,7 +216,6 @@ export default function Ebooks() {
           const data = JSON.parse(event.nativeEvent.data);
           if (data.currentPage) {
             pageRef.current = data.currentPage;
-            console.log(pageRef.current);
             updatePage(user?.id, bookId, pageRef.current);
           }
         }}
